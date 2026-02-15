@@ -1,0 +1,37 @@
+services:
+  mysql-db:
+    image: mysql:8
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: test123
+      MYSQL_DATABASE: definitions
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -ptest123 -e 'select 1'"]
+      interval: 5s
+      retries: 50
+
+  api:
+
+    build: ./Magidash/
+    ports:
+      - 8080:8080  # Standard Spring Boot port
+    environment:
+      # This overrides your application.properties for Docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/definitions?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=test123
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+    #  image: nginx:latest
+    #volumes:
+    # - ./nginx.conf:/etc/nginx/nginx.conf
+    #ports:
+    #  - 80:80
+    # - 443:443
+
+
